@@ -1,0 +1,12 @@
+version: "1"
+packages:
+  - name: "db"
+    emit_json_tags: false
+    emit_prepared_queries: false
+    emit_interface: true
+    path: internal/usecases/entities/db
+    queries: sql
+    schema: sql
+    engine: postgresql
+rename:
+  isbn: "ISBN"
