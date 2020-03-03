@@ -16,4 +16,4 @@ RETURNING *;
 SELECT b.*
 FROM authors a
          JOIN books b on a.id = b.author_id
-WHERE a.name = $1;
+WHERE a.id = $1;

@@ -7,13 +7,13 @@ import (
 )
 
 type Author struct {
-	ID   int64
-	Name sql.NullString
+	ID   int64          `json:"id"`
+	Name sql.NullString `json:"name"`
 }
 
 type Book struct {
-	ID       int64
-	Title    sql.NullString
-	AuthorID sql.NullInt64
-	ISBN     sql.NullString
+	ID       int64          `json:"id"`
+	Title    sql.NullString `json:"title"`
+	AuthorID sql.NullInt64  `json:"author_id"`
+	ISBN     sql.NullString `json:"isbn"`
 }

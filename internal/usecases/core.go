@@ -3,8 +3,6 @@ package usecases
 import (
 	"context"
 	"database/sql"
-	"fmt"
-
 	_ "github.com/lib/pq"
 
 	"github.com/powersjcb/sqlctest/internal/usecases/entities/db"
@@ -12,33 +10,34 @@ import (
 
 type Usecases interface {
 	CreateAuthor(ctx context.Context, name string) (db.Author, error)
-	CreateBook(ctx context.Context) (db.Book, error)
+	CreateBook(ctx context.Context, params db.CreateBookParams) (db.Book, error)
+	BooksByAuthor(ctx context.Context, id int64) ([]db.Book, error)
+
 }
 
 type CoreUsecases struct {
 	q *db.Queries
 }
 
-func NewCoreUsecases() CoreUsecases {
-	conn, err := sql.Open("postgres", "host=127.0.0.1 dbname=sqlctest sslmode=disable")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("opened connection to database successfully")
-	q := db.New(conn)
+type UsecasesArgs struct {
+	Conn db.DBTX
+}
+
+func NewCoreUsecases(args UsecasesArgs) CoreUsecases {
+	q := db.New(args.Conn)
 	return CoreUsecases{
 		q: q,
 	}
 }
 
-func (u *CoreUsecases) CreateAuthor(ctx context.Context, name string) (db.Author, error) {
-	author, err := u.q.CreateAuthor(ctx, sql.NullString{String: name, Valid: true})
-	fmt.Println("created author:", author)
-	return author, err
+func (u CoreUsecases) CreateAuthor(ctx context.Context, name string) (db.Author, error) {
+	return u.q.CreateAuthor(ctx, sql.NullString{String: name, Valid: true})
 }
 
-func (u *CoreUsecases) CreateBook(ctx context.Context, params db.CreateBookParams) (db.Book, error) {
-	book, err := u.q.CreateBook(ctx, params)
-	fmt.Println("created book")
-	return book, err
+func (u CoreUsecases) CreateBook(ctx context.Context, params db.CreateBookParams) (db.Book, error) {
+	return u.q.CreateBook(ctx, params)
+}
+
+func (u CoreUsecases) BooksByAuthor(ctx context.Context, id int64) ([]db.Book, error) {
+	return u.q.BooksByAuthor(ctx, id)
 }

@@ -8,7 +8,7 @@ import (
 )
 
 type Querier interface {
-	BooksByAuthor(ctx context.Context, name sql.NullString) ([]Book, error)
+	BooksByAuthor(ctx context.Context, id int64) ([]Book, error)
 	CreateAuthor(ctx context.Context, name sql.NullString) (Author, error)
 	CreateBook(ctx context.Context, arg CreateBookParams) (Book, error)
 	DeleteAuthor(ctx context.Context, id int64) error

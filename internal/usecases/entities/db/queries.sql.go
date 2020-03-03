@@ -12,11 +12,11 @@ const booksByAuthor = `-- name: BooksByAuthor :many
 SELECT b.id, b.title, b.author_id, b.isbn
 FROM authors a
          JOIN books b on a.id = b.author_id
-WHERE a.name = $1
+WHERE a.id = $1
 `
 
-func (q *Queries) BooksByAuthor(ctx context.Context, name sql.NullString) ([]Book, error) {
-	rows, err := q.db.QueryContext(ctx, booksByAuthor, name)
+func (q *Queries) BooksByAuthor(ctx context.Context, id int64) ([]Book, error) {
+	rows, err := q.db.QueryContext(ctx, booksByAuthor, id)
 	if err != nil {
 		return nil, err
 	}
@@ -63,9 +63,9 @@ RETURNING id, title, author_id, isbn
 `
 
 type CreateBookParams struct {
-	Title    sql.NullString
-	AuthorID sql.NullInt64
-	ISBN     sql.NullString
+	Title    sql.NullString `json:"title"`
+	AuthorID sql.NullInt64  `json:"author_id"`
+	ISBN     sql.NullString `json:"isbn"`
 }
 
 func (q *Queries) CreateBook(ctx context.Context, arg CreateBookParams) (Book, error) {
