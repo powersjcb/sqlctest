@@ -12,7 +12,6 @@ type Usecases interface {
 	CreateAuthor(ctx context.Context, name string) (db.Author, error)
 	CreateBook(ctx context.Context, params db.CreateBookParams) (db.Book, error)
 	BooksByAuthor(ctx context.Context, id int64) ([]db.Book, error)
-
 }
 
 type CoreUsecases struct {

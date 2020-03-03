@@ -5,12 +5,14 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/gorilla/mux"
 	"github.com/powersjcb/sqlctest/internal/usecases"
 	"github.com/powersjcb/sqlctest/internal/usecases/entities/db"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"sync/atomic"
 	"time"
 )
@@ -39,11 +41,12 @@ func (s *Server) Start() {
 	logger := log.New(os.Stdout, "server: ", log.LstdFlags)
 	logger.Println("Server is starting...")
 
-	router := http.NewServeMux()
-	router.Handle("/", index())
-	router.Handle("/healthz", healthz())
-	router.HandleFunc("/author", s.Authors)
-	router.HandleFunc("/books", s.Books)
+	r := mux.NewRouter()
+	r.Handle("/", index())
+	r.Handle("/healthz", healthz())
+	r.HandleFunc("/author", s.Authors)
+	r.HandleFunc("/author/{id:[0-9]+}/books", s.BooksByAuthor)
+	r.HandleFunc("/books", s.Books)
 
 	nextRequestID := func() string {
 		return fmt.Sprintf("%d", time.Now().UnixNano())
@@ -51,7 +54,7 @@ func (s *Server) Start() {
 
 	httpServer := http.Server{
 		Addr:     ":8888",
-		Handler:  tracing(nextRequestID)(logging(logger)(router)),
+		Handler:  tracing(nextRequestID)(logging(logger)(r)),
 		ErrorLog: logger,
 	}
 	log.Fatal(httpServer.ListenAndServe().Error())
@@ -149,6 +152,14 @@ func bookToBook(b db.Book) book {
 	}
 }
 
+func booksToBooks(books []db.Book) []book {
+	res := make([]book, len(books))
+	for i, _ := range books {
+		res[i] = bookToBook(books[i])
+	}
+	return res
+}
+
 func ToSQLNullInt64(p *int64) sql.NullInt64 {
 	fmt.Println(p)
 	if p == nil || *p == 0 {
@@ -187,4 +198,24 @@ func (s *Server) Books(w http.ResponseWriter, r *http.Request) {
 		w.Write(res)
 		w.WriteHeader(201)
 	}
+}
+
+func (s *Server) BooksByAuthor(w http.ResponseWriter, r *http.Request) {
+	idString := mux.Vars(r)["id"]
+	id, err := strconv.Atoi(idString)
+	if err != nil {
+		w.Write([]byte(err.Error()))
+		w.WriteHeader(400)
+		return
+	}
+	books, err := s.u.BooksByAuthor(r.Context(), int64(id))
+	if err != nil {
+		w.Write([]byte(err.Error()))
+		w.WriteHeader(500)
+		return
+	}
+
+	res, err := json.Marshal(booksToBooks(books))
+	w.Write(res)
+	w.WriteHeader(200)
 }
